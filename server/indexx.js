@@ -1,15 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const mysql2 = require("mysql2");
-
 const app = express();
-
 const PORT = 5000;
-
-/* =========================
-   MIDDLEWARE
-========================= */
-
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -18,11 +11,6 @@ app.use(
 );
 
 app.use(express.json());
-
-/* =========================
-   MYSQL CONNECTION
-========================= */
-
 const db = mysql2.createConnection({
   host: "localhost",
   port: 3306,
@@ -30,10 +18,6 @@ const db = mysql2.createConnection({
   password: "123456",
   database: "todo-list",
 });
-
-/* =========================
-   CONNECT DATABASE
-========================= */
 
 db.connect((err) => {
   if (err) {
@@ -51,23 +35,13 @@ db.connect((err) => {
   );
 });
 
-/* =========================
-   TEST API
-========================= */
-
 app.get("/", (req, res) => {
   res.json({
     message: "Todo API is running successfully",
   });
 });
-
-/* =========================
-   GET ALL TASKS
-========================= */
-
 app.get("/read-tasks", (req, res) => {
-
-  const sql = `
+ const sql = `
     SELECT
       id,
       task,
@@ -95,11 +69,6 @@ app.get("/read-tasks", (req, res) => {
     res.status(200).json(result);
   });
 });
-
-/* =========================
-   ADD TASK
-========================= */
-
 app.post("/new-task", (req, res) => {
 
   const { task } = req.body;
@@ -110,13 +79,11 @@ app.post("/new-task", (req, res) => {
       message: "Task is required",
     });
   }
-
   const sql = `
     INSERT INTO todos
     (task, createdAt, completed)
     VALUES (?, NOW(), 0)
   `;
-
   db.query(
     sql,
     [task.trim()],
@@ -149,11 +116,6 @@ app.post("/new-task", (req, res) => {
     }
   );
 });
-
-/* =========================
-   UPDATE / EDIT TASK
-========================= */
-
 app.put(
   "/update-task/:id",
   (req, res) => {
@@ -226,11 +188,6 @@ app.put(
     );
   }
 );
-
-/* =========================
-   COMPLETE / UNCOMPLETE
-========================= */
-
 app.put(
   "/complete-task/:id",
   (req, res) => {
@@ -252,14 +209,10 @@ app.put(
         id,
       ],
       (err, result) => {
-
-        if (err) {
-
-          console.log(
+        if (err) { console.log(
             "COMPLETE ERROR:",
             err.message
           );
-
           return res.status(500).json({
             message:
               "Failed to update task",
@@ -267,7 +220,6 @@ app.put(
             error: err.message,
           });
         }
-
         if (result.affectedRows === 0) {
 
           return res.status(404).json({
@@ -275,7 +227,6 @@ app.put(
               "Task not found",
           });
         }
-
         res.status(200).json({
           message:
             "Task status updated successfully",
@@ -284,11 +235,6 @@ app.put(
     );
   }
 );
-
-/* =========================
-   DELETE TASK
-========================= */
-
 app.delete(
   "/delete-task/:id",
   (req, res) => {
@@ -299,19 +245,16 @@ app.delete(
       DELETE FROM todos
       WHERE id = ?
     `;
-
     db.query(
       sql,
       [id],
       (err, result) => {
 
         if (err) {
-
           console.log(
             "DELETE ERROR:",
             err.message
           );
-
           return res.status(500).json({
             message:
               "Failed to delete task",
@@ -319,7 +262,6 @@ app.delete(
             error: err.message,
           });
         }
-
         if (result.affectedRows === 0) {
 
           return res.status(404).json({
@@ -327,7 +269,6 @@ app.delete(
               "Task not found",
           });
         }
-
         res.status(200).json({
           message:
             "Task deleted successfully",
@@ -336,13 +277,7 @@ app.delete(
     );
   }
 );
-
-/* =========================
-   START SERVER
-========================= */
-
 app.listen(PORT, () => {
-
   console.log(
     `SERVER RUNNING ON http://localhost:${PORT}`
   );

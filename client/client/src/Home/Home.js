@@ -17,23 +17,13 @@ const API = "http://localhost:5000";
 
 function Home() {
   const [tab, setTab] = useState(1);
-
   const [task, setTask] = useState("");
   const [tasks, setTasks] = useState([]);
-
   const [loading, setLoading] = useState(false);
-
-  // EDIT
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
-
-  /* =========================
-     GET TASKS
-  ========================= */
-
   const getTasks = async () => {
     setLoading(true);
-
     try {
       const response = await axios.get(`${API}/read-tasks`);
 
