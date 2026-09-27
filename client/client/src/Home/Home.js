@@ -37,10 +37,6 @@ function Home() {
     }
   };
 
-  /* =========================
-     ADD TASK
-  ========================= */
-
   const handleAddTask = async (e) => {
     e.preventDefault();
 
@@ -109,12 +105,8 @@ function Home() {
       );
 
       console.log("SAVE RESPONSE:", response.data);
-
-      // Exit edit mode
       setEditingId(null);
       setEditText("");
-
-      // Reload from database
       await getTasks();
 
     } catch (error) {
@@ -131,19 +123,10 @@ function Home() {
       );
     }
   };
-
-  /* =========================
-     CANCEL EDIT
-  ========================= */
-
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditText("");
   };
-
-  /* =========================
-     DELETE
-  ========================= */
 
   const handleDeleteTask = async (id) => {
     const confirmDelete = window.confirm(
