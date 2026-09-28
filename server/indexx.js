@@ -14,12 +14,17 @@ app.use(
 );
 
 app.use(express.json());
+
+
 const db = mysql2.createConnection({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
+  ssl: {
+    rejectUnauthorized: false, 
+  },
 });
 
 db.connect((err) => {
@@ -30,12 +35,30 @@ db.connect((err) => {
   }
 
   console.log("MYSQL CONNECTED SUCCESSFULLY!");
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS todos (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      task VARCHAR(255) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      completed TINYINT(1) DEFAULT 0
+    );
+  `;
+
+  db.query(createTableQuery, (err, result) => {
+    if (err) {
+      console.log("TABLE CREATION ERROR:", err.message);
+    } else {
+      console.log("TODOS TABLE IS READY ON CLEVER CLOUD!");
+    }
+  });
 });
+
 app.get("/", (req, res) => {
   res.json({
     message: "Todo API is running successfully",
   });
 });
+
 app.get("/read-tasks", (req, res) => {
   const sql = `
     SELECT
@@ -60,6 +83,7 @@ app.get("/read-tasks", (req, res) => {
     res.status(200).json(result);
   });
 });
+
 app.post("/new-task", (req, res) => {
   const { task } = req.body;
 
@@ -93,6 +117,7 @@ app.post("/new-task", (req, res) => {
     });
   });
 });
+
 app.put("/update-task/:id", (req, res) => {
   const { id } = req.params;
   const { task } = req.body;
@@ -146,31 +171,28 @@ app.put("/complete-task/:id", (req, res) => {
     WHERE id = ?
   `;
 
-  db.query(
-    sql,
-    [completed ? 1 : 0, id],
-    (err, result) => {
-      if (err) {
-        console.log("COMPLETE ERROR:", err.message);
+  db.query(sql, [completed ? 1 : 0, id], (err, result) => {
+    if (err) {
+      console.log("COMPLETE ERROR:", err.message);
 
-        return res.status(500).json({
-          message: "Failed to update task",
-          error: err.message,
-        });
-      }
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          message: "Task not found",
-        });
-      }
-
-      res.status(200).json({
-        message: "Task status updated successfully",
+      return res.status(500).json({
+        message: "Failed to update task",
+        error: err.message,
       });
     }
-  );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Task status updated successfully",
+    });
+  });
 });
+
 app.delete("/delete-task/:id", (req, res) => {
   const { id } = req.params;
 
