@@ -13,7 +13,7 @@ import {
 
 import "../Home/Home.css";
 
-const API = "http://localhost:5000";
+const API = "https://todo-list-4-iybr.onrender.com";
 
 function Home() {
   const [tab, setTab] = useState(1);
