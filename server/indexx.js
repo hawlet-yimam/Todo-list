@@ -4,18 +4,21 @@ const mysql2 = require("mysql2");
 require("dotenv").config();
 
 const app = express();
-
 const PORT = process.env.PORT || 5000;
+
+// 1. CORS Middleware ቅንብር (ለሁሉም Origins እና Headers ይፈቅዳል)
 app.use(
   cors({
-    origin: "*", 
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["X-Requested-With", "Content-Type", "Accept", "Authorization"],
   })
 );
 
-app.use(express.json());
+// 2. Preflight OPTIONS ጥያቄዎችን በግልጽ እንዲያልፉ ማድረግ (ወሳኝ!)
+app.options("*", cors());
 
+app.use(express.json());
 
 const db = mysql2.createConnection({
   host: process.env.DB_HOST,
