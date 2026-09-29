@@ -206,7 +206,7 @@ app.delete("/delete-task/:id", (req, res) => {
       console.log("DELETE ERROR:", err.message);
 
       return res.status(500).json({
-        message: "Failed to delete task",
+        message: "Failed to delete task", 
         error: err.message,
       });
     }

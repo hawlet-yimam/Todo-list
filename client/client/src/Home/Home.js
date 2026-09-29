@@ -69,19 +69,10 @@ function Home() {
     }
   };
 
-  /* =========================
-     START EDIT
-  ========================= */
-
   const handleStartEdit = (item) => {
     setEditingId(item.id);
     setEditText(item.task);
   };
-
-  /* =========================
-     SAVE EDIT
-  ========================= */
-
   const handleSaveEdit = async (id) => {
     const newTask = editText.trim();
 
@@ -153,11 +144,6 @@ function Home() {
       );
     }
   };
-
-  /* =========================
-     COMPLETE / UNCOMPLETE
-  ========================= */
-
   const handleCompleteTask = async (id, completed) => {
     try {
       const newCompleted = completed ? 0 : 1;
@@ -194,19 +180,9 @@ function Home() {
       );
     }
   };
-
-  /* =========================
-     LOAD TASKS
-  ========================= */
-
   useEffect(() => {
     getTasks();
   }, []);
-
-  /* =========================
-     FILTER
-  ========================= */
-
   const filteredTasks = tasks.filter((item) => {
     const completed = Number(item.completed) === 1;
 
@@ -220,10 +196,6 @@ function Home() {
 
     return true;
   });
-
-  /* =========================
-     COUNTS
-  ========================= */
 
   const totalTasks = tasks.length;
 
@@ -239,10 +211,6 @@ function Home() {
 
       <div className="flex-container">
 
-        {/* =========================
-            HEADER
-        ========================= */}
-
         <div className="header-title">
 
           <FaCheckCircle className="title-icon" />
@@ -250,17 +218,10 @@ function Home() {
           <h2>ToDo List</h2>
 
         </div>
-
-        {/* =========================
-            ADD TASK
-        ========================= */}
-
         <form
           className="input-area"
-          onSubmit={handleAddTask}
-        >
-
-          <input
+          onSubmit={handleAddTask} >
+  <input
             type="text"
             placeholder="Enter todo..."
             value={task}
@@ -268,8 +229,7 @@ function Home() {
               setTask(e.target.value)
             }
           />
-
-          <button
+ <button
             type="submit"
             className="add-btn"
           >
@@ -279,10 +239,6 @@ function Home() {
           </button>
 
         </form>
-
-        {/* =========================
-            FILTER
-        ========================= */}
 
         <div className="filters">
 
@@ -320,11 +276,6 @@ function Home() {
           </button>
 
         </div>
-
-        {/* =========================
-            TASK LIST
-        ========================= */}
-
         <div className="tasks-container">
 
           {loading ? (
@@ -362,11 +313,7 @@ function Home() {
                     }`
                   }
                   key={itemId}
-                >
-
-                  {/* =========================
-                      LEFT
-                  ========================= */}
+              >
 
                   <div className="card-left">
 
@@ -398,8 +345,6 @@ function Home() {
 
                     <div className="todo-info">
 
-                      {/* EDIT INPUT */}
-
                       {isEditing ? (
 
                         <input
@@ -430,8 +375,6 @@ function Home() {
 
                       )}
 
-                      {/* DATE */}
-
                       <div className="date-wrapper">
 
                         <FaRegCalendarAlt
@@ -445,9 +388,6 @@ function Home() {
                         </span>
 
                       </div>
-
-                      {/* STATUS */}
-
                       <div
                         className={
                           `status-badge ${
@@ -473,11 +413,6 @@ function Home() {
                     </div>
 
                   </div>
-
-                  {/* =========================
-                      ACTIONS
-                  ========================= */}
-
                   <div className="actions">
 
                     {isEditing ? (
