@@ -4,24 +4,34 @@ const mysql2 = require("mysql2");
 require("dotenv").config();
 
 const app = express();
+
 const PORT = process.env.PORT || 5000;
 
-// 1. CORS Headers በቀጥታ ለሁሉም Request እና Options መመደብ (100% CORS-Fix)
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+// =========================
+// CORS
+// =========================
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+    ],
+  })
+);
 
-  // Browser የሚልከውን Preflight OPTIONS request ወዲያውኑ 200 OK ብሎ ማሳለፍ
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
-
-app.use(cors());
+// =========================
+// Middleware
+// =========================
 app.use(express.json());
 
+// =========================
+// MySQL Connection
+// =========================
 const db = mysql2.createConnection({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 3306,
@@ -29,10 +39,13 @@ const db = mysql2.createConnection({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   ssl: {
-    rejectUnauthorized: false, 
+    rejectUnauthorized: false,
   },
 });
 
+// =========================
+// Connect MySQL
+// =========================
 db.connect((err) => {
   if (err) {
     console.log("MYSQL CONNECTION ERROR:");
@@ -41,6 +54,7 @@ db.connect((err) => {
   }
 
   console.log("MYSQL CONNECTED SUCCESSFULLY!");
+
   const createTableQuery = `
     CREATE TABLE IF NOT EXISTS todos (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -50,21 +64,27 @@ db.connect((err) => {
     );
   `;
 
-  db.query(createTableQuery, (err, result) => {
+  db.query(createTableQuery, (err) => {
     if (err) {
       console.log("TABLE CREATION ERROR:", err.message);
     } else {
-      console.log("TODOS TABLE IS READY ON CLEVER CLOUD!");
+      console.log("TODOS TABLE IS READY!");
     }
   });
 });
 
+// =========================
+// HOME / HEALTH CHECK
+// =========================
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     message: "Todo API is running successfully",
   });
 });
 
+// =========================
+// READ TASKS
+// =========================
 app.get("/read-tasks", (req, res) => {
   const sql = `
     SELECT
@@ -90,6 +110,9 @@ app.get("/read-tasks", (req, res) => {
   });
 });
 
+// =========================
+// ADD TASK
+// =========================
 app.post("/new-task", (req, res) => {
   const { task } = req.body;
 
@@ -100,8 +123,7 @@ app.post("/new-task", (req, res) => {
   }
 
   const sql = `
-    INSERT INTO todos
-    (task, createdAt, completed)
+    INSERT INTO todos (task, createdAt, completed)
     VALUES (?, NOW(), 0)
   `;
 
@@ -124,6 +146,9 @@ app.post("/new-task", (req, res) => {
   });
 });
 
+// =========================
+// UPDATE / EDIT TASK
+// =========================
 app.put("/update-task/:id", (req, res) => {
   const { id } = req.params;
   const { task } = req.body;
@@ -153,13 +178,13 @@ app.put("/update-task/:id", (req, res) => {
       });
     }
 
-    console.log("AFFECTED ROWS:", result.affectedRows);
-
     if (result.affectedRows === 0) {
       return res.status(404).json({
         message: "Task not found",
       });
     }
+
+    console.log("TASK UPDATED:", id);
 
     res.status(200).json({
       message: "Task updated successfully",
@@ -167,6 +192,9 @@ app.put("/update-task/:id", (req, res) => {
   });
 });
 
+// =========================
+// COMPLETE / UNCOMPLETE TASK
+// =========================
 app.put("/complete-task/:id", (req, res) => {
   const { id } = req.params;
   const { completed } = req.body;
@@ -193,12 +221,17 @@ app.put("/complete-task/:id", (req, res) => {
       });
     }
 
+    console.log("TASK STATUS UPDATED:", id);
+
     res.status(200).json({
       message: "Task status updated successfully",
     });
   });
 });
 
+// =========================
+// DELETE TASK
+// =========================
 app.delete("/delete-task/:id", (req, res) => {
   const { id } = req.params;
 
@@ -212,7 +245,7 @@ app.delete("/delete-task/:id", (req, res) => {
       console.log("DELETE ERROR:", err.message);
 
       return res.status(500).json({
-        message: "Failed to delete task", 
+        message: "Failed to delete task",
         error: err.message,
       });
     }
@@ -223,12 +256,17 @@ app.delete("/delete-task/:id", (req, res) => {
       });
     }
 
+    console.log("TASK DELETED:", id);
+
     res.status(200).json({
       message: "Task deleted successfully",
     });
   });
 });
 
+// =========================
+// START SERVER
+// =========================
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`SERVER RUNNING ON PORT ${PORT}`);
 });
