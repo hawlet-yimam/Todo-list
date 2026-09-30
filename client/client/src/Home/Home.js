@@ -13,18 +13,27 @@ import {
 
 import "../Home/Home.css";
 
+// Render Backend URL
 const API = "https://todo-list-4-iybr.onrender.com";
 
 function Home() {
   const [tab, setTab] = useState(1);
+
   const [task, setTask] = useState("");
   const [tasks, setTasks] = useState([]);
+
   const [loading, setLoading] = useState(false);
+
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
+
+  // =========================
+  // GET ALL TASKS
+  // =========================
   const getTasks = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
+
       const response = await axios.get(`${API}/read-tasks`);
 
       console.log("TASKS:", response.data);
@@ -32,11 +41,20 @@ function Home() {
       setTasks(response.data);
     } catch (error) {
       console.log("GET TASK ERROR:", error);
+      console.log("SERVER:", error.response?.data);
+
+      alert(
+        error.response?.data?.message ||
+          "Failed to load tasks"
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  // =========================
+  // ADD TASK
+  // =========================
   const handleAddTask = async (e) => {
     e.preventDefault();
 
@@ -48,31 +66,46 @@ function Home() {
     }
 
     try {
-      console.log("ADDING:", newTask);
+      console.log("ADDING TASK:", newTask);
 
-      await axios.post(`${API}/new-task`, {
-        task: newTask,
-      });
+      const response = await axios.post(
+        `${API}/new-task`,
+        {
+          task: newTask,
+        }
+      );
 
+      console.log("ADD RESPONSE:", response.data);
+
+      // Clear input
       setTask("");
 
+      // Reload tasks
       await getTasks();
-
     } catch (error) {
       console.log("ADD ERROR:", error);
+      console.log("STATUS:", error.response?.status);
       console.log("SERVER:", error.response?.data);
+      console.log("MESSAGE:", error.message);
 
       alert(
         error.response?.data?.message ||
-        "Failed to add task"
+          "Failed to add task"
       );
     }
   };
 
+  // =========================
+  // START EDIT
+  // =========================
   const handleStartEdit = (item) => {
     setEditingId(item.id);
     setEditText(item.task);
   };
+
+  // =========================
+  // SAVE EDIT
+  // =========================
   const handleSaveEdit = async (id) => {
     const newTask = editText.trim();
 
@@ -96,10 +129,13 @@ function Home() {
       );
 
       console.log("SAVE RESPONSE:", response.data);
+
+      // Exit edit mode
       setEditingId(null);
       setEditText("");
-      await getTasks();
 
+      // Reload tasks
+      await getTasks();
     } catch (error) {
       console.log("================================");
       console.log("SAVE ERROR");
@@ -110,15 +146,22 @@ function Home() {
 
       alert(
         error.response?.data?.message ||
-        "Failed to save task"
+          "Failed to save task"
       );
     }
   };
+
+  // =========================
+  // CANCEL EDIT
+  // =========================
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditText("");
   };
 
+  // =========================
+  // DELETE TASK
+  // =========================
   const handleDeleteTask = async (id) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this task?"
@@ -129,21 +172,29 @@ function Home() {
     }
 
     try {
-      await axios.delete(
+      console.log("DELETING TASK:", id);
+
+      const response = await axios.delete(
         `${API}/delete-task/${id}`
       );
 
-      await getTasks();
+      console.log("DELETE RESPONSE:", response.data);
 
+      await getTasks();
     } catch (error) {
       console.log("DELETE ERROR:", error);
+      console.log("SERVER:", error.response?.data);
 
       alert(
         error.response?.data?.message ||
-        "Failed to delete task"
+          "Failed to delete task"
       );
     }
   };
+
+  // =========================
+  // COMPLETE / UNCOMPLETE
+  // =========================
   const handleCompleteTask = async (id, completed) => {
     try {
       const newCompleted = completed ? 0 : 1;
@@ -154,42 +205,54 @@ function Home() {
         newCompleted
       );
 
-      await axios.put(
+      const response = await axios.put(
         `${API}/complete-task/${id}`,
         {
           completed: newCompleted,
         }
       );
 
+      console.log(
+        "COMPLETE RESPONSE:",
+        response.data
+      );
+
       await getTasks();
-
     } catch (error) {
-      console.log(
-        "COMPLETE ERROR:",
-        error
-      );
-
-      console.log(
-        "SERVER:",
-        error.response?.data
-      );
+      console.log("COMPLETE ERROR:", error);
+      console.log("SERVER:", error.response?.data);
 
       alert(
         error.response?.data?.message ||
-        "Failed to update task"
+          "Failed to update task"
       );
     }
   };
+
+  // =========================
+  // LOAD TASKS WHEN PAGE OPENS
+  // =========================
   useEffect(() => {
     getTasks();
   }, []);
+
+  // =========================
+  // FILTER TASKS
+  // =========================
   const filteredTasks = tasks.filter((item) => {
     const completed = Number(item.completed) === 1;
 
+    // All
+    if (tab === 1) {
+      return true;
+    }
+
+    // Active
     if (tab === 2) {
       return !completed;
     }
 
+    // Completed
     if (tab === 3) {
       return completed;
     }
@@ -197,6 +260,9 @@ function Home() {
     return true;
   });
 
+  // =========================
+  // TASK COUNTS
+  // =========================
   const totalTasks = tasks.length;
 
   const completedTasks = tasks.filter(
@@ -208,20 +274,25 @@ function Home() {
 
   return (
     <div className="bg">
-
       <div className="flex-container">
 
+        {/* =========================
+            HEADER
+        ========================= */}
         <div className="header-title">
-
           <FaCheckCircle className="title-icon" />
 
           <h2>ToDo List</h2>
-
         </div>
+
+        {/* =========================
+            ADD TASK
+        ========================= */}
         <form
           className="input-area"
-          onSubmit={handleAddTask} >
-  <input
+          onSubmit={handleAddTask}
+        >
+          <input
             type="text"
             placeholder="Enter todo..."
             value={task}
@@ -229,20 +300,23 @@ function Home() {
               setTask(e.target.value)
             }
           />
- <button
+
+          <button
             type="submit"
             className="add-btn"
           >
             <FaPlus className="plus-icon" />
-
             Add
           </button>
-
         </form>
 
+        {/* =========================
+            FILTER BUTTONS
+        ========================= */}
         <div className="filters">
 
           <button
+            type="button"
             className={
               tab === 1
                 ? "pill-btn active-pill"
@@ -254,6 +328,7 @@ function Home() {
           </button>
 
           <button
+            type="button"
             className={
               tab === 2
                 ? "pill-btn active-pill"
@@ -265,6 +340,7 @@ function Home() {
           </button>
 
           <button
+            type="button"
             className={
               tab === 3
                 ? "pill-btn active-pill"
@@ -276,22 +352,21 @@ function Home() {
           </button>
 
         </div>
+
+        {/* =========================
+            TASK LIST
+        ========================= */}
         <div className="tasks-container">
 
           {loading ? (
-
             <p className="no-tasks">
               Loading tasks...
             </p>
-
           ) : filteredTasks.length === 0 ? (
-
             <p className="no-tasks">
               No tasks found.
             </p>
-
           ) : (
-
             filteredTasks.map((item) => {
 
               const itemId = item.id;
@@ -303,7 +378,6 @@ function Home() {
                 Number(item.completed) === 1;
 
               return (
-
                 <div
                   className={
                     `todo-card ${
@@ -313,11 +387,15 @@ function Home() {
                     }`
                   }
                   key={itemId}
-              >
+                >
 
+                  {/* =========================
+                      LEFT SIDE
+                  ========================= */}
                   <div className="card-left">
 
                     <button
+                      type="button"
                       className="checkbox-btn"
                       onClick={() =>
                         handleCompleteTask(
@@ -326,27 +404,21 @@ function Home() {
                         )
                       }
                     >
-
                       {isCompleted ? (
-
                         <FaCheckCircle
                           className="checked-icon"
                         />
-
                       ) : (
-
                         <FaRegCircle
                           className="unchecked-icon"
                         />
-
                       )}
-
                     </button>
 
                     <div className="todo-info">
 
+                      {/* EDIT INPUT */}
                       {isEditing ? (
-
                         <input
                           type="text"
                           className="edit-input"
@@ -357,10 +429,17 @@ function Home() {
                             )
                           }
                           autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleSaveEdit(itemId);
+                            }
+
+                            if (e.key === "Escape") {
+                              handleCancelEdit();
+                            }
+                          }}
                         />
-
                       ) : (
-
                         <p
                           className={
                             `title ${
@@ -372,9 +451,9 @@ function Home() {
                         >
                           {item.task}
                         </p>
-
                       )}
 
+                      {/* DATE */}
                       <div className="date-wrapper">
 
                         <FaRegCalendarAlt
@@ -382,12 +461,16 @@ function Home() {
                         />
 
                         <span>
-                          {new Date(
-                            item.createdAt
-                          ).toLocaleString()}
+                          {item.createdAt
+                            ? new Date(
+                                item.createdAt
+                              ).toLocaleString()
+                            : ""}
                         </span>
 
                       </div>
+
+                      {/* STATUS */}
                       <div
                         className={
                           `status-badge ${
@@ -397,7 +480,6 @@ function Home() {
                           }`
                         }
                       >
-
                         <span className="dot">
                           ●
                         </span>
@@ -407,19 +489,21 @@ function Home() {
                             ? "Completed"
                             : "Active"}
                         </span>
-
                       </div>
 
                     </div>
-
                   </div>
+
+                  {/* =========================
+                      ACTION BUTTONS
+                  ========================= */}
                   <div className="actions">
 
                     {isEditing ? (
-
                       <>
-
+                        {/* SAVE */}
                         <button
+                          type="button"
                           className="icon-btn save-btn"
                           onClick={() =>
                             handleSaveEdit(
@@ -430,7 +514,9 @@ function Home() {
                           Save
                         </button>
 
+                        {/* CANCEL */}
                         <button
+                          type="button"
                           className="icon-btn cancel-btn"
                           onClick={
                             handleCancelEdit
@@ -438,14 +524,12 @@ function Home() {
                         >
                           Cancel
                         </button>
-
                       </>
-
                     ) : (
-
                       <>
-
+                        {/* COMPLETE */}
                         <button
+                          type="button"
                           className="icon-btn check-btn"
                           onClick={() =>
                             handleCompleteTask(
@@ -453,48 +537,70 @@ function Home() {
                               isCompleted
                             )
                           }
+                          title={
+                            isCompleted
+                              ? "Mark as active"
+                              : "Complete task"
+                          }
                         >
                           <FaCheck />
                         </button>
 
+                        {/* EDIT */}
                         <button
+                          type="button"
                           className="icon-btn edit-btn"
                           onClick={() =>
                             handleStartEdit(item)
                           }
+                          title="Edit task"
                         >
                           <FaEdit />
                         </button>
 
+                        {/* DELETE */}
                         <button
+                          type="button"
                           className="icon-btn delete-btn"
                           onClick={() =>
                             handleDeleteTask(
                               itemId
                             )
                           }
+                          title="Delete task"
                         >
                           <FaTrashAlt />
                         </button>
-
                       </>
-
                     )}
 
                   </div>
 
                 </div>
-
               );
-
             })
-
           )}
 
         </div>
 
-      </div>
+        {/* =========================
+            OPTIONAL TASK COUNT
+        ========================= */}
+        <div className="task-count">
+          <span>
+            Total: {totalTasks}
+          </span>
 
+          <span>
+            Active: {activeTasks}
+          </span>
+
+          <span>
+            Completed: {completedTasks}
+          </span>
+        </div>
+
+      </div>
     </div>
   );
 }
